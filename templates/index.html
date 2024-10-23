@@ -22,9 +22,9 @@
             color: #343a40;
         }
         .bg-light-blue {
-    background-color: #add8e6; /* Light blue color */
-}
-footer {
+            background-color: #add8e6;
+        }
+        footer {
             position: fixed;
             bottom: 0;
             width: 100%;
@@ -34,39 +34,36 @@ footer {
             text-align: center;
             z-index: 999;
         }
-
         footer a {
             color: white;
             text-decoration: none;
         }
-
         footer a:hover {
             text-decoration: underline;
         }
-
         .social-icons .btn {
             margin: 0 5px;
         }
         .nav-link {
-        margin-right: 15px;
-        color: #007bff; /* Default link color */
-        transition: color 0.3s; /* Smooth transition for color change */
-    }
-    .social-icons {
+            margin-right: 15px;
+            color: #007bff;
+            transition: color 0.3s;
+        }
+        .social-icons {
             display: flex;
             justify-content: center;
-            gap: 15px; /* Space between buttons */
-            margin-bottom: 15px; /* Space below social icons */
+            gap: 15px;
+            margin-bottom: 15px;
         }
         .btn-social {
-            font-size: 1.5rem; /* Increase icon size */
-            border-radius: 50%; /* Make buttons circular */
-            padding: 10px; /* Add padding for buttons */
+            font-size: 1.5rem;
+            border-radius: 50%;
+            padding: 10px;
         }
-    .nav-link:hover {
-        color: #0056b3; /* Color on hover */
-        text-decoration: underline; /* Underline effect on hover */
-    }
+        .nav-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
         .pagination {
             margin: 20px 0;
         }
@@ -116,24 +113,17 @@ footer {
         </div>
 
         <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center mt-3">
                 {% if page > 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page - 1 }}" aria-label="Previous">
+                    <a class="page-link" href="{{ url_for('index', page=page - 1) }}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
                 {% endif %}
-                {% for i in range(1, total_pages + 1) %}
-                <li class="page-item {% if page == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                </li>
-                {% endfor %}
                 {% if page < total_pages %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page + 1 }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
+                    <a class="page-link" href="{{ url_for('index', page=page + 1) }}">Next</a>
                 </li>
                 {% endif %}
             </ul>
@@ -171,7 +161,6 @@ footer {
             <p>Phone: <a href="tel:+919121700886">+91 9121700886</a></p>
         </div>
     </footer>
-    
     
     <script>
         function adjustFooterPosition() {
