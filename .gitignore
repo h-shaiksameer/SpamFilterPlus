@@ -10,7 +10,6 @@ __pycache__/
 *.log
 
 # Data files
-emails.csv
 SMSSpamCollection
 
 # IDE or editor files
