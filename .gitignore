@@ -1,0 +1,24 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Data files
+emails.csv
+SMSSpamCollection
+
+# IDE or editor files
+.vscode/
+*.sublime-workspace
+*.sublime-project
+*.idea/
+
+# OS-specific files
+Thumbs.db
+.DS_Store
