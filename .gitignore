@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
-
+venv
 # Environment variables
 .env
 .vercel
