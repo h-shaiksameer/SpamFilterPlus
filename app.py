@@ -2,11 +2,6 @@
 
 
 
-
-
-
-
-
 # from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 # import pandas as pd
 # import os
@@ -63,29 +58,38 @@
 #     paginated_data = data[start_row:end_row]
 
 #     if request.method == 'POST':
-#         message = request.form.get('message', '').strip()
-#         if message:
-#             cleaned_message = clean_text(message)
-#             message_vectorized = vectorizer.transform([cleaned_message])
-#             prediction = model.predict(message_vectorized)[0]
-#             image_path = visualize_distribution(data)
+#         form_type = request.form.get('form_type')
 
-#         uploaded_file = request.files.get('dataset')
-#         if uploaded_file and uploaded_file.filename.endswith('.csv'):
-#             filename = secure_filename(uploaded_file.filename)
-#             filepath = os.path.join(UPLOAD_FOLDER, filename)
-#             uploaded_file.save(filepath)
-#             try:
-#                 new_df = pd.read_csv(filepath)
-#                 if 'label' in new_df.columns and 'message' in new_df.columns:
-#                     model, vectorizer, accuracy_percent = train_model(new_df)
-#                     data = new_df
-#                     flash(f'Model retrained successfully with uploaded dataset. Accuracy: {accuracy_percent:.2f}%', 'success')
-#                     return redirect(url_for('index'))
-#                 else:
-#                     flash('CSV must contain "label" and "message" columns.', 'danger')
-#             except Exception as e:
-#                 flash(f'Error reading CSV file: {str(e)}', 'danger')
+#         if form_type == 'predict':
+#             message = request.form.get('message', '').strip()
+#             if message:
+#                 cleaned_message = clean_text(message)
+#                 message_vectorized = vectorizer.transform([cleaned_message])
+#                 prediction = model.predict(message_vectorized)[0]
+#                 image_path = visualize_distribution(data)
+
+#         elif form_type == 'upload':
+#             uploaded_file = request.files.get('dataset')
+#             if uploaded_file and uploaded_file.filename.endswith('.csv'):
+#                 filename = secure_filename(uploaded_file.filename)
+#                 filepath = os.path.join(UPLOAD_FOLDER, filename)
+#                 uploaded_file.save(filepath)
+#                 print(f"[INFO] Uploaded file saved: {filepath}")
+#                 flash(f'File {filename} uploaded successfully.', 'info')
+
+#                 try:
+#                     new_df = pd.read_csv(filepath)
+#                     if 'label' in new_df.columns and 'message' in new_df.columns:
+#                         model, vectorizer, accuracy_percent = train_model(new_df)
+#                         data = new_df
+#                         flash(f'Model retrained successfully with uploaded dataset. Accuracy: {accuracy_percent:.2f}%', 'success')
+#                         return redirect(url_for('index'))
+#                     else:
+#                         flash('CSV must contain "label" and "message" columns.', 'danger')
+#                 except Exception as e:
+#                     flash(f'Error reading CSV file: {str(e)}', 'danger')
+#             else:
+#                 flash('Please upload a valid CSV file.', 'danger')
 
 #     return render_template('index.html',
 #                            prediction=prediction,
@@ -114,6 +118,7 @@
 # if __name__ == "__main__":
 #     port = int(os.environ.get("PORT", 5000))
 #     app.run(host="0.0.0.0", port=port, debug=True)
+
 
 
 
@@ -162,15 +167,21 @@ model, vectorizer, accuracy_percent = train_model(data)
 def index():
     global model, vectorizer, data, accuracy_percent
     prediction = ""
+    probability = None
     image_path = ""
+
+    search_query = request.args.get('search', '').strip().lower()
+    filtered_data = data.copy()
+    if search_query:
+        filtered_data = filtered_data[filtered_data['message'].str.lower().str.contains(search_query, na=False)]
 
     page = int(request.args.get('page', 1))
     per_page = 10
-    total_rows = len(data)
+    total_rows = len(filtered_data)
     total_pages = (total_rows + per_page - 1) // per_page
     start_row = (page - 1) * per_page
     end_row = start_row + per_page
-    paginated_data = data[start_row:end_row]
+    paginated_data = filtered_data[start_row:end_row]
 
     if request.method == 'POST':
         form_type = request.form.get('form_type')
@@ -181,6 +192,7 @@ def index():
                 cleaned_message = clean_text(message)
                 message_vectorized = vectorizer.transform([cleaned_message])
                 prediction = model.predict(message_vectorized)[0]
+                probability = model.predict_proba(message_vectorized)[0].max() * 100
                 image_path = visualize_distribution(data)
 
         elif form_type == 'upload':
@@ -208,11 +220,13 @@ def index():
 
     return render_template('index.html',
                            prediction=prediction,
+                           probability=round(probability, 2) if probability else None,
                            data=paginated_data,
                            image_path=image_path,
                            page=page,
                            total_pages=total_pages,
-                           accuracy=accuracy_percent)
+                           accuracy=accuracy_percent,
+                           search_query=search_query)
 
 @app.route('/read_email', methods=['GET', 'POST'])
 def read_email():

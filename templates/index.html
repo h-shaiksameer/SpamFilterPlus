@@ -1,207 +1,6 @@
 <!-- <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spam Filter</title>
-    <link rel="icon" href="static/android-chrome-512x512.png" type="image/png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .container {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            color: #343a40;
-        }
-        .bg-light-blue {
-            background-color: #add8e6;
-        }
-        footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            padding: 20px 0;
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-            z-index: 999;
-        }
-        footer a {
-            color: white;
-            text-decoration: none;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
-        .social-icons .btn {
-            margin: 0 5px;
-        }
-        .nav-link {
-            margin-right: 15px;
-            color: #007bff;
-            transition: color 0.3s;
-        }
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .btn-social {
-            font-size: 1.5rem;
-            border-radius: 50%;
-            padding: 10px;
-        }
-        .nav-link:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        .pagination {
-            margin: 20px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Spam Filtering System</h1>
-        <nav class="d-flex justify-content-center mb-4">
-            <a class="nav-link" href="/">Home</a>
-            <a class="nav-link" href="/read_email">Read Email</a>
-            <a class="nav-link" href="/download_spam">Download Spam Messages</a>
-        </nav>
-        <form action="/" method="post" enctype="multipart/form-data" class="mb-4">
-            <div class="input-group">
-                <input type="file" name="dataset" accept=".csv" class="form-control" required>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-upload"></i> Upload & Retrain
-                </button>
-            </div>
-            <div class="form-text">Upload a CSV with columns: <code>label</code> and <code>message</code>.</div>
-        </form>
-        
-        <form method="POST">
-            <div class="mb-3">
-                <textarea class="form-control" name="message" rows="4" placeholder="Enter your message here..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-check-circle"></i> Submit
-            </button>
-        </form>
-
-        {% if accuracy %}
-            <div class="alert alert-info mt-3">
-                <h5 class="text-center">Model Accuracy on Test Set: {{ accuracy }}%</h5>
-            </div>
-        {% endif %}
-
-        {% if prediction %}
-            <div class="alert {% if prediction == 'ham' %}alert-success{% else %}alert-danger{% endif %} mt-3">
-                <h2 class="text-center">Predicted Label: {{ prediction }}</h2>
-            </div>
-        {% endif %}
-
-
-        <h2 class="mt-5">Dataset Overview:</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Label</th>
-                        <th>Message</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for index, row in data.iterrows() %}
-                    <tr>
-                        <td>{{ row.label }}</td>
-                        <td>{{ row.message }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mt-3">
-                {% if page > 1 %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('index', page=page - 1) }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                {% endif %}
-                {% if page < total_pages %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('index', page=page + 1) }}">Next</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-
-        <h2>Distribution Plot:</h2>
-        <div class="text-center">
-            <img src="{{ image_path }}" alt="Distribution Plot" class="img-fluid">
-        </div>
-    </div>
-    <footer class="bg-light-blue text-center mt-5">
-        <div class="social-icons">
-            <a href="https://www.facebook.com/shaiksameer.hussain.12?mibextid=ZbWKwL" target="_blank" class="btn btn-primary btn-social">
-                <i class="bi bi-facebook"></i>
-            </a>
-            <a href="https://www.linkedin.com/in/shaik-sameer-hussain-b88323250?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" class="btn btn-social btn-linkedin">
-                <i class="bi bi-linkedin"></i>
-            </a>
-            <a href="https://www.instagram.com/h_shaiksameer?igsh=MXZhZDRoY2NsMHU5bw==" target="_blank" class="btn btn-danger btn-social">
-                <i class="bi bi-instagram"></i>
-            </a>
-            <a href="https://github.com/Sameerq7" target="_blank" class="btn btn-dark btn-social">
-                <i class="bi bi-github"></i>
-            </a>
-        </div>
-    
-        <div class="mt-3 text-black">
-            <p><strong>About Me</strong></p>
-            <p>Enthusiastic about leveraging artificial intelligence to transform education, I specialize in creating advanced platforms that enhance learning experiences. With a focus on developing intelligent applications, I integrate machine learning and data analytics to provide personalized solutions that empower students and educators alike.</p>
-        </div>
-    
-        <div class="mt-3 text-black">
-            <p><strong>Contact Me</strong></p>
-            <p>Email: <a href="mailto:9121sameer@gmail.com">9121sameer@gmail.com</a></p>
-            <p>Phone: <a href="tel:+919121700886">+91 9121700886</a></p>
-        </div>
-    </footer>
-    
-    <script>
-        function adjustFooterPosition() {
-            var footerHeight = document.querySelector('footer').offsetHeight;
-            var bodyHeight = document.body.offsetHeight;
-            if (bodyHeight + footerHeight <= window.innerHeight) {
-                document.querySelector('footer').style.position = 'fixed';
-            } else {
-                document.querySelector('footer').style.position = 'static';
-            }
-        }
-    
-        window.addEventListener('resize', adjustFooterPosition);
-        window.addEventListener('load', adjustFooterPosition);
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html> -->
-
-
-<!-- updated index.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spam Filter</title>
@@ -273,7 +72,7 @@
       <a class="nav-link" href="/download_spam">Download Spam Messages</a>
     </nav>
 
-    <!-- flash messages -->
+    
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -285,7 +84,7 @@
       {% endif %}
     {% endwith %}
 
-    <!-- Dataset Upload Form -->
+    
     <form action="/" method="post" enctype="multipart/form-data" class="mb-4">
       <input type="hidden" name="form_type" value="upload">
       <div class="mb-3">
@@ -298,7 +97,7 @@
       </button>
     </form>
 
-    <!-- Message Prediction Form -->
+    
     <form method="POST">
       <input type="hidden" name="form_type" value="predict">
       <div class="mb-3">
@@ -407,3 +206,255 @@
 </body>
 </html>
 
+
+
+ -->
+
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spam Filter</title>
+  <link rel="icon" href="static/android-chrome-512x512.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .container {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: #343a40;
+    }
+    footer {
+      width: 100%;
+      padding: 20px 0;
+      background-color: #343a40;
+      color: white;
+      text-align: center;
+      z-index: 999;
+    }
+    footer a {
+      color: white;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+    .nav-link {
+      margin-right: 15px;
+      color: #007bff;
+      transition: color 0.3s;
+    }
+    .nav-link:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .btn-social {
+      font-size: 1.5rem;
+      border-radius: 50%;
+      padding: 10px;
+    }
+    .pagination {
+      margin: 20px 0;
+    }
+
+    @media (max-width: 576px) {
+      .container {
+        padding: 10px;
+      }
+      h1, h2 {
+        font-size: 1.25rem;
+      }
+      .btn {
+        font-size: 0.9rem;
+      }
+      .table-responsive {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1 class="text-center">Spam Filtering System</h1>
+    <nav class="d-flex justify-content-center mb-4">
+      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link" href="/read_email">Read Email</a>
+      <a class="nav-link" href="/download_spam">Download Spam Messages</a>
+    </nav>
+  <!-- Message Prediction Form -->
+  <form method="POST" class="mb-4">
+    <input type="hidden" name="form_type" value="predict">
+    <div class="mb-3">
+      <textarea class="form-control" name="message" rows="4" placeholder="Enter your message here..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">
+      <i class="bi bi-check-circle"></i> Submit
+    </button>
+  </form>
+  <!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+
+  {% if accuracy %}
+    <div class="alert alert-info mt-3">
+      <h5 class="text-center">Model Accuracy on Test Set: {{ accuracy }}%</h5>
+    </div>
+  {% endif %}
+
+  {% if prediction %}
+    <div class="alert {% if prediction == 'ham' %}alert-success{% else %}alert-danger{% endif %} mt-3">
+      <h2 class="text-center">Predicted Label: {{ prediction }}</h2>
+      {% if probability is defined %}
+      <p class="text-center mb-0">Spam Probability Score: <strong>{{ (probability * 1) | round(2) }}%</strong></p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- Retrain Model Section -->
+  <h2 class="mt-5">Retrain Model</h2>
+  <form method="POST" enctype="multipart/form-data" class="mb-4">
+    <input type="hidden" name="form_type" value="upload">
+    <div class="mb-3">
+      <label for="dataset" class="form-label">Upload New Dataset (.csv)</label>
+      <input class="form-control" type="file" name="dataset" id="dataset" accept=".csv" required>
+    </div>
+    <button type="submit" class="btn btn-success w-100">
+      <i class="bi bi-upload"></i> Retrain Model
+    </button>
+  </form>
+
+  <!-- Search Bar -->
+  <div class="mb-3 mt-5">
+    <form method="get" action="/">
+      <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Search messages..." value="{{ request.args.get('search', '') }}">
+        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Search</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Dataset Table -->
+  <h2 class="mt-4">Dataset Overview:</h2>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for index, row in data.iterrows() %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td>{{ row.message }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center mt-3">
+      {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('index', page=page - 1, search=request.args.get('search')) }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('index', page=page + 1, search=request.args.get('search')) }}">Next</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- Spam CSV download button if spam exists -->
+  {% if data['label'].str.contains('spam').any() %}
+    <div class="text-center mt-4">
+      <a class="btn btn-outline-danger" href="/download_spam_csv">
+        <i class="bi bi-file-earmark-arrow-down"></i> Download Filtered Spam as CSV
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Distribution Plot -->
+  <h2 class="mt-5">Distribution Plot:</h2>
+  <div class="text-center">
+    <img src="{{ image_path }}" alt="Distribution Plot" class="img-fluid">
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="text-center mt-5 bg-light-blue">
+  <div class="social-icons">
+    <a href="https://www.facebook.com/shaiksameer.hussain.12?mibextid=ZbWKwL" target="_blank" class="btn btn-primary btn-social">
+      <i class="bi bi-facebook"></i>
+    </a>
+    <a href="https://www.linkedin.com/in/shaik-sameer-hussain-b88323250" target="_blank" class="btn btn-social btn-linkedin">
+      <i class="bi bi-linkedin"></i>
+    </a>
+    <a href="https://www.instagram.com/h_shaiksameer" target="_blank" class="btn btn-danger btn-social">
+      <i class="bi bi-instagram"></i>
+    </a>
+    <a href="https://github.com/Sameerq7" target="_blank" class="btn btn-dark btn-social">
+      <i class="bi bi-github"></i>
+    </a>
+  </div>
+  <div class="mt-3 text-white">
+    <p><strong>About Me</strong></p>
+    <p>Enthusiastic about leveraging artificial intelligence to transform education, I specialize in creating advanced platforms that enhance learning experiences...</p>
+  </div>
+  <div class="mt-3 text-white">
+    <p><strong>Contact Me</strong></p>
+    <p>Email: <a href="mailto:9121sameer@gmail.com">9121sameer@gmail.com</a></p>
+    <p>Phone: <a href="tel:+919121700886">+91 9121700886</a></p>
+  </div>
+</footer>
+
+<script>
+  function adjustFooterPosition() {
+    var footer = document.querySelector('footer');
+    if (document.body.scrollHeight < window.innerHeight) {
+      footer.style.position = 'fixed';
+      footer.style.bottom = '0';
+    } else {
+      footer.style.position = 'static';
+    }
+  }
+  window.addEventListener('resize', adjustFooterPosition);
+  window.addEventListener('load', adjustFooterPosition);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
