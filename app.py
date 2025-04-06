@@ -1,59 +1,99 @@
-# from flask import Flask, render_template, request, send_file
+
+
+
+
+
+
+
+
+
+# from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 # import pandas as pd
-# import re
+# import os
+# from werkzeug.utils import secure_filename
 # from sklearn.feature_extraction.text import CountVectorizer
 # from sklearn.naive_bayes import MultinomialNB
-# import os
-# from dotenv import load_dotenv  # Import to load environment variables
-# from explore_dataset import load_data, visualize_distribution, clean_text  # Import functions
-# from read_email import read_email_view 
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import accuracy_score
+# from dotenv import load_dotenv
+# from explore_dataset import load_data, visualize_distribution, clean_text
+# from read_email import read_email_view
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
 
 # app = Flask(__name__)
+# app.secret_key = 'secret-key-for-flashing'
 
-# # Load environment variables from .env file
 # load_dotenv()
 # email = os.getenv('EMAIL')
 # email_pass = os.getenv('EMAIL_PASS')
 
-# # Load the dataset
-# data = load_data('emails.csv')  # Load data using your function
-# data['message'] = data['message'].apply(clean_text)
+# UPLOAD_FOLDER = 'uploads'
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# # Prepare data for model training
-# X = data['message']
-# y = data['label']
+# def train_model(df):
+#     df['message'] = df['message'].apply(clean_text)
+#     X = df['message']
+#     y = df['label']
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+#     vec = CountVectorizer()
+#     X_train_vec = vec.fit_transform(X_train)
+#     X_test_vec = vec.transform(X_test)
+#     clf = MultinomialNB()
+#     clf.fit(X_train_vec, y_train)
+#     acc = accuracy_score(y_test, clf.predict(X_test_vec))
+#     return clf, vec, round(acc * 100, 2)
 
-# vectorizer = CountVectorizer()
-# X_vectorized = vectorizer.fit_transform(X)
-
-# model = MultinomialNB()
-# model.fit(X_vectorized, y)
+# data = load_data('emails.csv')
+# model, vectorizer, accuracy_percent = train_model(data)
 
 # @app.route('/', methods=['GET', 'POST'])
 # def index():
+#     global model, vectorizer, data, accuracy_percent
 #     prediction = ""
 #     image_path = ""
 
-#     # Pagination settings
 #     page = int(request.args.get('page', 1))
 #     per_page = 10
 #     total_rows = len(data)
 #     total_pages = (total_rows + per_page - 1) // per_page
-    
 #     start_row = (page - 1) * per_page
 #     end_row = start_row + per_page
 #     paginated_data = data[start_row:end_row]
 
 #     if request.method == 'POST':
-#         message = request.form['message']
-#         cleaned_message = clean_text(message)
-#         message_vectorized = vectorizer.transform([cleaned_message])
-#         prediction = model.predict(message_vectorized)[0]
-        
-#         # Generate and save plot
-#         image_path = visualize_distribution(data)  # Call to visualize_distribution
+#         message = request.form.get('message', '').strip()
+#         if message:
+#             cleaned_message = clean_text(message)
+#             message_vectorized = vectorizer.transform([cleaned_message])
+#             prediction = model.predict(message_vectorized)[0]
+#             image_path = visualize_distribution(data)
 
-#     return render_template('index.html', prediction=prediction, data=paginated_data, image_path=image_path, page=page, total_pages=total_pages)
+#         uploaded_file = request.files.get('dataset')
+#         if uploaded_file and uploaded_file.filename.endswith('.csv'):
+#             filename = secure_filename(uploaded_file.filename)
+#             filepath = os.path.join(UPLOAD_FOLDER, filename)
+#             uploaded_file.save(filepath)
+#             try:
+#                 new_df = pd.read_csv(filepath)
+#                 if 'label' in new_df.columns and 'message' in new_df.columns:
+#                     model, vectorizer, accuracy_percent = train_model(new_df)
+#                     data = new_df
+#                     flash(f'Model retrained successfully with uploaded dataset. Accuracy: {accuracy_percent:.2f}%', 'success')
+#                     return redirect(url_for('index'))
+#                 else:
+#                     flash('CSV must contain "label" and "message" columns.', 'danger')
+#             except Exception as e:
+#                 flash(f'Error reading CSV file: {str(e)}', 'danger')
+
+#     return render_template('index.html',
+#                            prediction=prediction,
+#                            data=paginated_data,
+#                            image_path=image_path,
+#                            page=page,
+#                            total_pages=total_pages,
+#                            accuracy=accuracy_percent)
 
 # @app.route('/read_email', methods=['GET', 'POST'])
 # def read_email():
@@ -63,6 +103,7 @@
 # def download_spam():
 #     spam_data = data[data['label'] == 'spam']
 #     csv_path = 'static/results/spam_messages.csv'
+#     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
 #     spam_data.to_csv(csv_path, index=False)
 #     return render_template('download.html')
 
@@ -70,60 +111,56 @@
 # def download_spam_csv():
 #     return send_file('static/results/spam_messages.csv', as_attachment=True)
 
-
-
 # if __name__ == "__main__":
 #     port = int(os.environ.get("PORT", 5000))
-#     app.run(host="0.0.0.0", port=port)
+#     app.run(host="0.0.0.0", port=port, debug=True)
 
 
 
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 import pandas as pd
-import re
+import os
+from werkzeug.utils import secure_filename
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-import os
 from dotenv import load_dotenv
 from explore_dataset import load_data, visualize_distribution, clean_text
-from read_email import read_email_view 
+from read_email import read_email_view
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend suitable for Flask
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from pandas.plotting import scatter_matrix
-
 
 app = Flask(__name__)
+app.secret_key = 'secret-key-for-flashing'
 
 load_dotenv()
 email = os.getenv('EMAIL')
 email_pass = os.getenv('EMAIL_PASS')
 
-# Load and clean dataset
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def train_model(df):
+    df['message'] = df['message'].apply(clean_text)
+    X = df['message']
+    y = df['label']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    vec = CountVectorizer()
+    X_train_vec = vec.fit_transform(X_train)
+    X_test_vec = vec.transform(X_test)
+    clf = MultinomialNB()
+    clf.fit(X_train_vec, y_train)
+    acc = accuracy_score(y_test, clf.predict(X_test_vec))
+    return clf, vec, round(acc * 100, 2)
+
 data = load_data('emails.csv')
-data['message'] = data['message'].apply(clean_text)
-
-# Split data
-X = data['message']
-y = data['label']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-vectorizer = CountVectorizer()
-X_train_vectorized = vectorizer.fit_transform(X_train)
-X_test_vectorized = vectorizer.transform(X_test)
-
-model = MultinomialNB()
-model.fit(X_train_vectorized, y_train)
-
-# Calculate accuracy
-y_pred = model.predict(X_test_vectorized)
-accuracy = accuracy_score(y_test, y_pred)
-accuracy_percent = round(accuracy * 100, 2)
+model, vectorizer, accuracy_percent = train_model(data)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global model, vectorizer, data, accuracy_percent
     prediction = ""
     image_path = ""
 
@@ -136,11 +173,38 @@ def index():
     paginated_data = data[start_row:end_row]
 
     if request.method == 'POST':
-        message = request.form['message']
-        cleaned_message = clean_text(message)
-        message_vectorized = vectorizer.transform([cleaned_message])
-        prediction = model.predict(message_vectorized)[0]
-        image_path = visualize_distribution(data)
+        form_type = request.form.get('form_type')
+
+        if form_type == 'predict':
+            message = request.form.get('message', '').strip()
+            if message:
+                cleaned_message = clean_text(message)
+                message_vectorized = vectorizer.transform([cleaned_message])
+                prediction = model.predict(message_vectorized)[0]
+                image_path = visualize_distribution(data)
+
+        elif form_type == 'upload':
+            uploaded_file = request.files.get('dataset')
+            if uploaded_file and uploaded_file.filename.endswith('.csv'):
+                filename = secure_filename(uploaded_file.filename)
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                uploaded_file.save(filepath)
+                print(f"[INFO] Uploaded file saved: {filepath}")
+                flash(f'File {filename} uploaded successfully.', 'info')
+
+                try:
+                    new_df = pd.read_csv(filepath)
+                    if 'label' in new_df.columns and 'message' in new_df.columns:
+                        model, vectorizer, accuracy_percent = train_model(new_df)
+                        data = new_df
+                        flash(f'Model retrained successfully with uploaded dataset. Accuracy: {accuracy_percent:.2f}%', 'success')
+                        return redirect(url_for('index'))
+                    else:
+                        flash('CSV must contain "label" and "message" columns.', 'danger')
+                except Exception as e:
+                    flash(f'Error reading CSV file: {str(e)}', 'danger')
+            else:
+                flash('Please upload a valid CSV file.', 'danger')
 
     return render_template('index.html',
                            prediction=prediction,
@@ -158,6 +222,7 @@ def read_email():
 def download_spam():
     spam_data = data[data['label'] == 'spam']
     csv_path = 'static/results/spam_messages.csv'
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     spam_data.to_csv(csv_path, index=False)
     return render_template('download.html')
 
@@ -167,4 +232,4 @@ def download_spam_csv():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
