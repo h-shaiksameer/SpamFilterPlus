@@ -87,11 +87,18 @@
             </button>
         </form>
 
+        {% if accuracy %}
+            <div class="alert alert-info mt-3">
+                <h5 class="text-center">Model Accuracy on Test Set: {{ accuracy }}%</h5>
+            </div>
+        {% endif %}
+
         {% if prediction %}
             <div class="alert {% if prediction == 'ham' %}alert-success{% else %}alert-danger{% endif %} mt-3">
                 <h2 class="text-center">Predicted Label: {{ prediction }}</h2>
             </div>
         {% endif %}
+
 
         <h2 class="mt-5">Dataset Overview:</h2>
         <div class="table-responsive">
