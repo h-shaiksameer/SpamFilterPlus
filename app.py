@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import pandas as pd
 import re
 from sklearn.feature_extraction.text import CountVectorizer
@@ -58,6 +58,19 @@ def index():
 @app.route('/read_email', methods=['GET', 'POST'])
 def read_email():
     return read_email_view()
+
+@app.route('/download_spam')
+def download_spam():
+    spam_data = data[data['label'] == 'spam']
+    csv_path = 'static/results/spam_messages.csv'
+    spam_data.to_csv(csv_path, index=False)
+    return render_template('download.html')
+
+@app.route('/download_spam_csv')
+def download_spam_csv():
+    return send_file('static/results/spam_messages.csv', as_attachment=True)
+
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
